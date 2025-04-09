@@ -24,8 +24,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bdo-js": "^0.0.6",
-    "fount-js": "0.0.6",
-    "sessionless-node": "^0.11.0"
+    "bdo-js": "latest",
+    "fount-js": "latest",
+    "magic-gateway-js": "latest",
+    "sessionless-node": "latest"
   }
 }

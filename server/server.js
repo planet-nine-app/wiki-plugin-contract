@@ -1,9 +1,11 @@
 (function() {
+var _gateway = require('magic-gateway-js');
 var _fount = require('fount-js');
 var _bdo = require('bdo-js');
 var sessionless = require('sessionless-node');
 var fs = require('fs');
 
+const gateway = _gateway.default;
 const fount = _fount.default;
 const bdo = _bdo.default;
 
@@ -48,7 +50,7 @@ console.log('err', err);
     });
   });
 
-  app.get('/plugin/contract/user', async function(req, res) {
+//  app.get('/plugin/contract/user', async function(req, res) {
 console.log('getting called here');
     let fountUser;
     let bdoUUID;
@@ -80,8 +82,8 @@ console.log('grave error getting galaxy bud', err);
       }
     } 
 
-    res.send(allyabaseUser);
-  });
+//    res.send(allyabaseUser);
+//  });
 
   app.post('/plugin/contract/resolve', async function(req, res) {
     const payload = req.body;
@@ -136,6 +138,10 @@ console.log('getting the user on the server, it looks like: ', fountUser);
     const flavor = req.body.flavor;
 console.log('granting nineum to', toUUID);
 console.log('with flavor ', flavor);
+
+    if(!allyabaseUser.fountUser) {
+      allyabaseUser.fountUser = await fount.getUserByPublicKey(argv.pub_key);
+    }
 
     const grantee = await fount.grantNineum(allyabaseUser.fountUser.uuid, toUUID, flavor);
 console.log('the grantee now looks like: ', grantee);
@@ -215,6 +221,37 @@ console.log(err);
       res.send({err});
     }
   });
+
+  const spellbook = {
+    spellbookName: 'ReaLocalize',
+    contract: {
+      cost: 1,
+      destinations: [
+        {stopName: 'contract-wiki', stopURL: 'http://127.0.0.1:4444/plugin/magic/spell/'},
+        {stopName: 'fount', stopURL: 'http://127.0.0.1:3006/resolve/'}
+      ]
+    }
+  };
+
+  const myStopName = 'contract-wiki';
+
+  const extraForGateway = (spellName) => {
+    if(spellName === 'contract') {
+      return 'contractUUID';
+    }    
+  };
+
+  const onSuccess = (req, res, result) => {
+    const spell = req.body;
+    const casterUUID = spell.casterUUID;
+    const targetUUID = spell.gateways[0].uuid;
+    const flavor = 'e1e1e1e1e1e1';
+
+    fount.grantNineum(targetUUID, casterUUID, flavor);
+    res.send(result);
+  };
+
+  gateway.expressApp(app, allyabaseUser.fountUser, spellbook, myStopName, sessionless, extraForGateway, onSuccess);
 }
 
 module.exports = {startServer};
